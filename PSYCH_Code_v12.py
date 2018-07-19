@@ -1,40 +1,15 @@
-
-# coding: utf-8
-
-# In[1]:
-
-
 import pandas as pd 
 import numpy as np 
 from functools import reduce
 import os 
 import openpyxl
 
-
-# In[2]:
-
-
-list_control = [27,29,31] 
-list_shams = [5,9,11,19,21,23]
-list_stimulated = [13,15,17]
-rat_category = {'controls': list_control,'shams': list_shams,'stimulated': list_stimulated}
-
-
-# In[3]:
-
-
-print(rat_category )
-
-
-# In[4]:
-
-
 '''
 df_1 = dataframe with only the value of total intake, meal size etc 
 df_2 = dataframe with value of total intake, meal size etc + column for rat type too 
 
 '''
-
+#function that converts the data into tables------------------------------------------------------------
 def tabulate(filenames, result_page , rat_category):
     day_wise_result = []
     final_df = pd.DataFrame()
@@ -99,8 +74,7 @@ def tabulate(filenames, result_page , rat_category):
 
 
 
-
-
+#function that transfers data ----------------------------------------------------------------------------------
 def transfer_data(filenames, result_page_list , rat_category, output_filename):
     writer = pd.ExcelWriter(output_filename + '.xlsx', engine='xlsxwriter')
     
@@ -123,32 +97,44 @@ def transfer_data(filenames, result_page_list , rat_category, output_filename):
             if col != 'type_of_rat':
                 new_col_names.append(col)
         new_col_names.append('type_of_rat')
-        print(new_col_names)
+        
         final_df = final_df[new_col_names]
+        print(sheetname + " transferred")
+        
+        
         #writing the dataframes to the excel sheet 
         final_df.to_excel(writer, sheet_name=sheetname, index=False)
         averages.to_excel(writer, sheet_name=sheetname, index=False, startrow=(final_df.shape[0]) + 2 , startcol= 0) 
+        
+    #calcuating differences for each excel sheet 
+    avg_shams_controls = averages.loc['shams'] - averages.loc['controls'] 
+    avg_stimulated_controls = averages.loc['stimulated'] - averages.loc['controls']
+    sum_avg_shams_controls = sum(avg_shams_controls)
+    sum_avg_stimulated_controls = sum(avg_stimulated_controls)
     writer.save()
     
     print("Result saved in file : " + output_filename)
         
-  
 
-
-# In[35]:
-
-
-#final function 
+#final execution of the functions ----------------------------------------------------------------------------------------
 filenames = [str(x) for x in input("Enter the name of files with space in between : ").split()]
-list_control = [27,29,31] 
-list_shams = [5,9,11,19,21,23]
-list_stimulated = [13,15,17]
+
+#list_control = [27,29,31] 
+#list_shams = [5,9,11,19,21,23]
+#list_stimulated = [13,15,17]
+
+list_control = [int(x) for x in input("Enter the CONTROL RAT NO.S : ").split()]
+list_shams = [int(x) for x in input("Enter the SHAM RAT NO.S : ").split()]
+list_stimulated = [int(x) for x in input("Enter the STIMULATED RAT NO.S : ").split()]
+
+
 rat_category = {'controls': list_control,'shams': list_shams,'stimulated': list_stimulated}
 
 output_filename = input("Enter the ouput filename : ")
 
-transfer_data(filenames = filenames, result_page_list=['total intake','meal number','meal size','intermeal interval'],
+final_df , averages , avg_shams_controls, avg_stimulated_controls, sum_avg_shams_controls, sum_avg_stimulated_controls = transfer_data(filenames = filenames, result_page_list=['total intake','meal number','meal size','intermeal interval'],
               rat_category = rat_category, output_filename = output_filename)
 
 
+# now we manually calculate some of the sums from each sheet of the resultant workbook and paste the results there-------
 
